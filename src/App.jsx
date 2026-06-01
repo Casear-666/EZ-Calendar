@@ -57,7 +57,8 @@ export default function App() {
 
   // ── 自定义边缘拉伸（参照 energy-calendar 思路：ghost 预览 + 鼠标事件）──
   const resizeRef = useRef(null);       // { eventId, edge, origStart, origEnd }
-  const [resizeGhost, setResizeGhost] = useState(null); // 拖拽时的半透明预览事件
+  const [resizeGhost, setResizeGhost] = useState(null);   // 拉伸时的幽灵预览
+  const [createGhost, setCreateGhost] = useState(null);   // 新建选择时的幽灵预览
   const eventsRef = useRef(events);
   eventsRef.current = events;
   const moveEventRef = useRef(moveEvent);
@@ -162,6 +163,7 @@ export default function App() {
 
   // ── FullCalendar 回调 ──
   const handleSelect = useCallback((selectInfo) => {
+    setCreateGhost(null);
     const { start, end, allDay } = selectInfo;
     let taskStart, taskEnd;
     if (allDay || start.toDateString() !== end.toDateString()) {
@@ -266,6 +268,7 @@ export default function App() {
   const renderEventContent = useCallback((eventInfo) => {
     const evId = parseInt(eventInfo.event.id);
     const isGhost = eventInfo.event.extendedProps?._ghost;
+    const isCreate = eventInfo.event.extendedProps?._create;
     const lv = isGhost ? 1 : (overlapMap.get(evId) || 1);
     const c = colorForOverlap(lv);
     const isMultiDay = eventInfo.event.start.toDateString() !== eventInfo.event.end.toDateString();
@@ -274,18 +277,21 @@ export default function App() {
 
     return (
       <div
-        className={`ec-event-content${isGhost ? ' ec-event-ghost' : ''}`}
+        className={`ec-event-content${isGhost ? (isCreate ? ' ec-event-create' : ' ec-event-ghost') : ''}`}
         style={{
           background: isGhost
-            ? `repeating-linear-gradient(45deg, ${c.bg}44, ${c.bg}44 4px, ${c.bg}22 4px, ${c.bg}22 8px)`
+            ? (isCreate
+              ? `linear-gradient(135deg, ${c.bg}66, ${c.bg}33)`
+              : `repeating-linear-gradient(45deg, ${c.bg}44, ${c.bg}44 4px, ${c.bg}22 4px, ${c.bg}22 8px)`)
             : eventGradient(c),
           color: c.text,
           borderRadius: '6px',
           padding: isMultiDay ? '3px 8px' : '2px 6px',
           height: '100%', overflow: 'hidden',
-          opacity: isGhost ? 0.75 : 1,
-          outline: isGhost ? '2px dashed rgba(255,255,255,0.6)' : 'none',
+          opacity: isGhost ? 0.7 : 1,
+          outline: isGhost && !isCreate ? '2px dashed rgba(255,255,255,0.6)' : 'none',
           outlineOffset: '-2px',
+          boxShadow: isCreate ? '0 0 12px rgba(92,107,192,0.4)' : 'none',
         }}
       >
         <div className="ec-event-time">{eventInfo.timeText}</div>
@@ -400,16 +406,32 @@ export default function App() {
           initialView="dayGridMonth"
           locale="zh-cn"
           firstDay={1}
-          events={resizeGhost
-            ? filteredEvents.map(e => e.id === resizeGhost._eventId ? { ...resizeGhost, id: e.id, _ghost: true } : e)
-            : filteredEvents}
+          events={(() => {
+            let evs = filteredEvents;
+            if (resizeGhost) evs = evs.map(e => e.id === resizeGhost._eventId ? { ...resizeGhost, id: e.id, _ghost: true } : e);
+            if (createGhost) evs = [...evs, createGhost];
+            return evs;
+          })()}
           editable={true}
           eventStartEditable={true}
           eventDurationEditable={true}
           eventResizableFromStart={true}
           selectable={true}
           selectMirror={true}
+          selectAllow={(info) => {
+            const gs = info.start;
+            const ge = info.allDay || gs.toDateString() !== info.end.toDateString()
+              ? new Date(info.end.getFullYear(), info.end.getMonth(), info.end.getDate() - 1, 18, 0)
+              : new Date(gs.getTime() + 3600000);
+            if (ge <= gs) return true;
+            setCreateGhost({
+              id: -99, title: '新任务', start: new Date(gs.getFullYear(), gs.getMonth(), gs.getDate(), 9, 0),
+              end: ge, _ghost: true, _create: true,
+            });
+            return true;
+          }}
           select={handleSelect}
+          unselect={() => setCreateGhost(null)}
           eventClick={handleEventClick}
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
