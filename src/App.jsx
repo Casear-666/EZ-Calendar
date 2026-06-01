@@ -427,9 +427,10 @@ export default function App() {
               ? new Date(info.end.getFullYear(), info.end.getMonth(), info.end.getDate() - 1, 18, 0)
               : new Date(gs.getTime() + 3600000);
             if (ge <= gs) return true;
-            setCreateGhost({
-              id: -99, title: '新任务', start: new Date(gs.getFullYear(), gs.getMonth(), gs.getDate(), 9, 0),
-              end: ge, _ghost: true, _create: true,
+            const gStart = new Date(gs.getFullYear(), gs.getMonth(), gs.getDate(), 9, 0);
+            setCreateGhost(prev => {
+              if (prev && prev.start.getTime() === gStart.getTime() && prev.end.getTime() === ge.getTime()) return prev;
+              return { id: -99, title: '新任务', start: gStart, end: ge, _ghost: true, _create: true };
             });
             return true;
           }}
