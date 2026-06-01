@@ -354,12 +354,45 @@ export default function App() {
           <span className="legend-gradient" style={{ background: gradient }} />
           <span className="legend-label">高压力</span>
         </div>
+        <div className="legend-info">
+          {searchQuery ? (
+            <span>找到 {filteredEvents.length}/{events.length} 个任务</span>
+          ) : (
+            <span>共 {events.length} 个任务</span>
+          )}
+        </div>
         <div className="legend-hint">
           右键删除 · 拖拽移动 · 边缘拉伸 · 按 <kbd>N</kbd> 新建 · 按 <kbd>?</kbd> 快捷键
         </div>
       </div>
 
+      {/* ── 加载骨架屏 ── */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner" />
+          <span>加载任务数据...</span>
+        </div>
+      )}
+
+      {/* ── 空状态 ── */}
+      {!loading && events.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">📅</div>
+          <h3>还没有任务</h3>
+          <p>点击空白格或按 <kbd>N</kbd> 开始创建</p>
+          <button className="add-btn" onClick={() => {
+            setEditingEvent(null);
+            const now = new Date();
+            setSelectedRange({ start: now, end: new Date(now.getTime() + 3600000) });
+            setShowModal(true);
+          }}>
+            <Plus size={16} /> 创建第一个任务
+          </button>
+        </div>
+      )}
+
       {/* ── 日历主体 ── */}
+      {!loading && events.length > 0 && (
       <div className="calendar-wrapper">
         <FullCalendar
           ref={calRef}
@@ -394,6 +427,7 @@ export default function App() {
           eventOrder="start,-duration,title"
         />
       </div>
+      )}
 
       {/* ── 悬浮详情 ── */}
       <AnimatePresence>
