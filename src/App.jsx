@@ -65,11 +65,14 @@ export default function App() {
   moveEventRef.current = moveEvent;
 
   const getDateFromPoint = useCallback((x, y) => {
-    const el = document.elementFromPoint(x, y);
-    const cell = el?.closest?.('[data-date]');
-    if (cell) {
-      const d = new Date(cell.getAttribute('data-date') + 'T00:00:00');
-      if (!isNaN(d.getTime())) return d;
+    // elementsFromPoint 能穿透 pointer-events:none 的幽灵元素
+    const els = document.elementsFromPoint(x, y);
+    for (const el of els) {
+      const cell = el?.closest?.('[data-date]');
+      if (cell) {
+        const d = new Date(cell.getAttribute('data-date') + 'T00:00:00');
+        if (!isNaN(d.getTime())) return d;
+      }
     }
     return null;
   }, []);
