@@ -386,17 +386,31 @@ export default function App() {
       {/* ── 空状态 ── */}
       {!loading && events.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">📅</div>
-          <h3>还没有任务</h3>
-          <p>点击空白格或按 <kbd>N</kbd> 开始创建</p>
-          <button className="add-btn" onClick={() => {
-            setEditingEvent(null);
-            const now = new Date();
-            setSelectedRange({ start: now, end: new Date(now.getTime() + 3600000) });
-            setShowModal(true);
-          }}>
-            <Plus size={16} /> 创建第一个任务
-          </button>
+          <div className="empty-card">
+            <div className="empty-icon">
+              <Zap size={48} />
+            </div>
+            <h2>开始规划你的时间</h2>
+            <p>日历还是空的，创建第一个任务来体验精力感知着色</p>
+            <div className="empty-actions">
+              <button className="add-btn add-btn-lg" onClick={() => {
+                setEditingEvent(null);
+                const now = new Date();
+                setSelectedRange({ start: now, end: new Date(now.getTime() + 3600000) });
+                setShowModal(true);
+              }}>
+                <Plus size={18} /> 创建任务
+              </button>
+              <span className="empty-or">或</span>
+              <span className="empty-hint">在日历空白处拖拽选择日期范围</span>
+            </div>
+            <div className="empty-shortcuts">
+              <span>快捷键：</span>
+              <kbd>N</kbd> <span>新建</span>
+              <span className="empty-sep">·</span>
+              <kbd>?</kbd> <span>查看全部</span>
+            </div>
+          </div>
         </div>
       )}
 
