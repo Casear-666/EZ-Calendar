@@ -3,13 +3,12 @@
  * 纯函数引擎 — 零外部依赖
  */
 
-// ═══════════════ HSL 重叠色阶 ═══════════════
 const STOPS = [
-  { n: 1, h: 120, s: 55, l: 43 },  // 绿色 — 低压力
-  { n: 2, h: 48,  s: 80, l: 48 },  // 琥珀色
-  { n: 3, h: 28,  s: 85, l: 48 },  // 橙色
-  { n: 5, h: 8,   s: 80, l: 44 },  // 深橙
-  { n: 8, h: 2,   s: 78, l: 38 },  // 深红 — 高压力
+  { n: 1, h: 120, s: 55, l: 43 },
+  { n: 2, h: 48,  s: 80, l: 48 },
+  { n: 3, h: 28,  s: 85, l: 48 },
+  { n: 5, h: 8,   s: 80, l: 44 },
+  { n: 8, h: 2,   s: 78, l: 38 },
 ];
 
 function lerp(a, b, t) { return a + (b - a) * t; }
@@ -21,7 +20,6 @@ function lerpHue(h1, h2, t) {
   return ((h1 + d * t) % 360 + 360) % 360;
 }
 
-/** @returns {{ bg: string, text: string, h: number, s: number, l: number }} */
 export function colorForOverlap(n) {
   if (n <= 1) {
     const s = STOPS[0];
@@ -42,20 +40,17 @@ export function colorForOverlap(n) {
   return { bg: `hsl(${h},${s}%,${l}%)`, text: textColor, h, s, l };
 }
 
-/** 事件条微渐变 */
 export function eventGradient(c) {
   const top = `hsl(${c.h},${c.s}%,${c.l}%)`;
   const bottom = `hsl(${c.h},${c.s}%,${Math.max(0, c.l - 8)}%)`;
   return `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
 }
 
-/** 图例渐变条 */
 export function legendGradient() {
   const stops = [1, 2, 3, 5, 8];
   return `linear-gradient(90deg, ${stops.map(n => colorForOverlap(n).bg).join(', ')})`;
 }
 
-// ═══════════════ 标签色板 ═══════════════
 export const TAG_PALETTE = {
   work:     { bg: '#e3f2fd', dot: '#42a5f5', text: '#1565c0', label: '工作' },
   meeting:  { bg: '#fff3e0', dot: '#ff9800', text: '#e65100', label: '会议' },

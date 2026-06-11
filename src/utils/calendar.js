@@ -2,16 +2,17 @@
  * 日历工具函数 — 纯算法，零外部依赖
  */
 
+/** 本地日期键 "2026-06-04"（不受时区偏移影响） */
+function dayKey(date) {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /**
  * 扫线算法计算重叠数 O(n log n)
- * 输入：全部事件数组 + 目标事件的起止时间
- * 输出：该目标事件的最大重叠数（含自身，≥ 1）
- *
- * @param {Array} events — 全部事件
- * @param {Date|string} targetStart
- * @param {Date|string} targetEnd
- * @param {number} excludeId — 排除的事件 ID（自身）
- * @returns {number}
  */
 export function calcOverlap(events, targetStart, targetEnd, excludeId) {
   const t0 = new Date(targetStart).getTime();
@@ -30,7 +31,6 @@ export function calcOverlap(events, targetStart, targetEnd, excludeId) {
   }
   if (points.length === 0) return 1;
 
-  // 时间优先 → 同时间 -1 先于 +1（重叠计数的正确语义）
   points.sort((a, b) => a.t - b.t || a.d - b.d);
 
   let cur = 0, max = 0;
@@ -38,5 +38,31 @@ export function calcOverlap(events, targetStart, targetEnd, excludeId) {
     cur += p.d;
     max = Math.max(max, cur);
   }
-  return max + 1;  // +1 = 含自身
+  return max + 1;
 }
+
+/**
+ * 日历日密度 — 统计每个日历日有多少事件
+ * 输入：全部事件数组
+ * 输出：Map<"2026-06-04", count>
+ */
+export function calcDayDensity(events) {
+  const map = new Map();
+
+  for (const ev of events) {
+    const start = new Date(ev.start);
+    const end = new Date(ev.end);
+
+    const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+    while (cursor <= endDay) {
+      map.set(dayKey(cursor), (map.get(dayKey(cursor)) || 0) + 1);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  return map;
+}
+
+export { dayKey };
